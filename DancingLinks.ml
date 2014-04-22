@@ -1,8 +1,5 @@
 open Core.Std
-<<<<<<< HEAD
-=======
 
->>>>>>> d0b671b5d6e53dd5436812bba25b89d284ed0b20
 
 type node = {
   mutable up : node;
