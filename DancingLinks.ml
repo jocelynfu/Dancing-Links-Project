@@ -31,7 +31,7 @@ let add_right n1 n2 =
   n2.left <- n1;
   n2.right.left <- n2
 
-(* add ne node below existing node *)
+(* add new node below existing node *)
 let add_below n1 n2 =
   let tmp = n1.down in
   n1.down <- n2;
