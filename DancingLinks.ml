@@ -1,4 +1,5 @@
 open Core.Std
+open Array
 
 
 type node = {
@@ -13,8 +14,9 @@ type node = {
 
 type m = {
   master : node;
-  num_col : int; (* number of columns *)
+  num_col: int;
 }
+
 
 let one_by_one () =
   let rec m = {name = "head"; header = m;
@@ -22,46 +24,6 @@ let one_by_one () =
 	       left = m; right = m}
   in m
 
-
-(* add new node to the right of existing node *)
-let add_right n1 n2 =
-  let tmp = n1.right in
-  n1.right <- n2;
-  n2.right <- tmp;
-  n2.left <- n1;
-  n2.right.left <- n2
-
-(* add ne node below existing node *)
-let add_below n1 n2 =
-  let tmp = n1.down in
-  n1.down <- n2;
-  n2.down <- tmp;
-  n2.up <- n1;
-  n2.down.up <- n2
-
-
-(* add row beneath the array of headers *)
-(* the row is an array of boolean values *)
-let add_row headers row i =
-  let rec addi_rec n previous =
-    if n < Array.length row then
-      if row.(n) then 
-	begin
-	  let elt = one_by_one () in
-	  elt.header <- headers.(n);
-	  elt.size <- i;
-	  elt.name <- headers.(n).name;
-	  headers.(n).size <- headers.(n).size + 1;
-	  if n <> 0 then
-	    add_right previous elt;
-	  add_below headers.(n) elt;
-	  addi_rec (n+1) elt
-	end
-      else addi_rec (n+1) previous
-  in
-  addi_rec 0 (one_by_one ())
-
-=======
 
 (* Adds n2 to the right of n1 in the DLM *)
 let add_right n1 n2 =
@@ -124,10 +86,10 @@ let create ?primary m =
   for i = Array.length m - 1 downto 0 do
     add_row headers m.(i) i
   done;
-  { header = h; nc = nc; }
+  { master = h; num_col = nc; }
 
 let create_sparse ?primary ~columns:nc a =
-  let h = one_node () in
+  let h = one_by_one () in
   let headers = generate_headers ?primary nc h in
   let row = Array.make nc false in
   for i = Array.length a - 1 downto 0 do
@@ -135,5 +97,4 @@ let create_sparse ?primary ~columns:nc a =
     List.iter (fun c -> row.(c) <- true) a.(i);
     add_row headers row i
   done;
-  { header = h; nc = nc; }
-
+  { master = h; num_col = nc; }
