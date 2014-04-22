@@ -15,14 +15,16 @@ type node = {
 
 type m = {
   master : node;
-  num_col : int; (* number of columns *)
+  num_col: int;
 }
+
 
 let one_by_one () =
   let rec m = {name = "head"; header = m;
 	       size = 0; up = m; down = m;
 	       left = m; right = m}
   in m
+
 
 
 (* add new node to the right of existing node *)
@@ -42,26 +44,25 @@ let add_below n1 n2 =
   n2.down.up <- n2
 
 
-(* add row beneath the array of headers *)
-(* the row is an array of boolean values *)
+(* Adds row after the headers in the DLM *)
 let add_row headers row i =
-  let rec addi_rec n previous =
+  let rec add_rec n prev =
     if n < Array.length row then
-      if row.(n) then 
-	begin
-	  let elt = one_by_one () in
-	  elt.header <- headers.(n);
-	  elt.size <- i;
-	  elt.name <- headers.(n).name;
-	  headers.(n).size <- headers.(n).size + 1;
-	  if n <> 0 then
-	    add_right previous elt;
-	  add_below headers.(n) elt;
-	  addi_rec (n+1) elt
-	end
-      else addi_rec (n+1) previous
+      if row.(n) then begin
+        let element = one_by_one () in
+        element.size <- i;
+        element.header <- headers.(n);
+        element.name <- "";
+        headers.(n).size <- headers.(n).size + 1;
+        if n <> 0 then
+          add_right prev element;
+        add_below headers.(n) element;
+        add_rec (n + 1) element
+      end else
+        add_rec (n + 1) prev
   in
-  addi_rec 0 (one_by_one ())
+  add_rec 0 (one_by_one ())
+
 
 (* Returns a DLM only with the headers *)
 let generate_headers ?primary size h =
@@ -101,6 +102,16 @@ let create_sparse ?primary ~columns:nc a =
   done;
   { master = h; num_col = nc; }
 
+(* Applies f to elements of the DLM, from up to down*)
+let iter_down ?(self = true) f n =
+  if self then f n;
+  let rec rec_iter_down node =
+    if node <> n then begin
+      f node;
+      rec_iter_down node.down
+    end
+  in
+  rec_iter_down n.down
 
 (* Applies f to elements of the DLM, from right to left *)
 let iter_left ?(self = true) f n =
@@ -113,6 +124,17 @@ let iter_left ?(self = true) f n =
   in
   rec_iter_left n.left
 
+(* Applies f to elements of the DLM, from right to left *)
+let iter_right ?(self = true) f n =
+  if self then f n;
+  let rec rec_iter_right node =
+    if node <> n then begin
+      f node;
+      rec_iter_right node.right
+    end
+  in
+  rec_iter_right n.right
+
 (* Applies f to elements of the DLM, from down to up *)
 let iter_up ?(self = true) f n =
   if self then f n;
@@ -124,47 +146,28 @@ let iter_up ?(self = true) f n =
   in
   rec_iter_up n.up
 
-(* Applies f to elements of the DLM, from up to down*)
-let iter_down ?(self = true) f n =
-  if self then f n;
-  let rec rec_iter_down node =
-    if node <> n then begin
-      f node;
-      rec_iter_down node.down
-    end
-  in
-  rec_iter_down n.down
-
-let iter_right ?(self = true) f n =
-  if self then f n;
-  let rec helper node =
-    if node <> n then
-      begin
-	f node;
-	helper node.right
-      end
-  in
-  helper n.right
 
 (* removes a column *)
-let remove_col header =
-  header.right.left <- header.left;
-  header.left.right <- header.right
+let remove_col header = 
+   header.right.left <- header.left;
+   header.left.right <- header.right
 
 (* removes a row *)
-let remove_row row =
-  let remove n =
+let remove_row row = 
+   let cover_node n =
     n.down.up <- n.up;
     n.up.down <- n.down;
     n.header.size <- n.header.size - 1
-  in iter_right ~self:false remove row
+  in
+  iter_right ~self:false cover_node row 
 
-let cover header =
-  remove_col header;
-  iter_down ~self:false remove_row header
-
-* Un-removes the given column and all rows in column own list from
+(* Removes the given column and all rows in column own list from
  the DLM*)
+let cover column_header =
+  remove_col column_header;
+  iter_down ~self:false remove_row column_header
+
+(* Un-removes the given column and all rows in column own list from the DLM*)
 let uncover column_header =
   let uncover_node n =
     n.header.size <- n.header.size + 1;
