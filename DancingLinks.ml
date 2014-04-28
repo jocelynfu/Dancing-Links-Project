@@ -1,22 +1,54 @@
 open Core.Std
 open Array
-open Format
 
 
-type node = {
-  mutable up : node;
-  mutable down : node;
-  mutable left : node;
-  mutable right : node;
-  mutable header : node;
-  mutable size : int;
-  mutable name : string;
-}
+module type D =
+  sig
+    
+    type node
+    type m
 
-type m = {
-  master : node;
-  num_col: int;
-}
+    (* add node to the right of existing node *)	   
+    val add_right : node -> node -> unit
+
+    (* add node below the existing node *)
+    val add_below : node -> node -> unit
+
+    (* add a row to the matrix *)
+    val add_row : node array -> bool array -> int -> unit
+
+    (* removes a column or a row *)
+    val remove_col : node -> unit
+    val remove_row : node -> unit
+
+    val cover : node -> unit
+
+    val uncover : node -> unit
+
+    (* Abstract type of a solution *)
+    type solution
+
+    (* what functions do we need here? *)
+						 
+  end;;
+
+module DancingLinks : D =
+  struct
+
+    type node = {
+      mutable up : node;
+      mutable down : node;
+      mutable left : node;
+      mutable right : node;
+      mutable header : node;
+      mutable size : int;
+      mutable name : string;
+    }
+		  
+    type m = {
+      headers : node;
+      num_col: int;
+    }
 
 
 let one_by_one () =
@@ -44,7 +76,7 @@ let add_below n1 n2 =
   n2.down.up <- n2
 
 
-(* Adds row after the headers in the DLM *)
+(* Adds row after the headers in the matrix *)
 let add_row headers row i =
   let rec add_rec n prev =
     if n < Array.length row then
@@ -64,7 +96,7 @@ let add_row headers row i =
   add_rec 0 (one_by_one ())
 
 
-(* Returns a DLM only with the headers *)
+(* Returns a matrix only with the headers *)
 let generate_headers ?primary size h =
   let headers = Array.init size (fun _ -> one_by_one ()) in
   let primary = match primary with
@@ -81,28 +113,8 @@ let generate_headers ?primary size h =
   done;
   headers
 
-(* Creates a DLM from a boolean matrix *)
-let create ?primary m =
-  let h = one_by_one () in
-  let num_col = Array.length m.(0) in
-  let headers = generate_headers ?primary num_col h in
-  for i = Array.length m - 1 downto 0 do
-    add_row headers m.(i) i
-  done;
-  { master = h; num_col = num_col; }
 
-let create_sparse ?primary ~columns:nc a =
-  let h = one_by_one () in
-  let headers = generate_headers ?primary nc h in
-  let row = Array.create nc false in
-  for i = Array.length a - 1 downto 0 do
-    Array.fill row 0 nc false;
-    List.iter ~f:(fun c -> row.(c) <- true) a.(i);
-    add_row headers row i
-  done;
-  { master = h; num_col = nc; }
-
-(* Applies f to elements of the DLM, from up to down*)
+(* Applies f to elements of the matrix, from up to down*)
 let iter_down ?(self = true) f n =
   if self then f n;
   let rec rec_iter_down node =
@@ -113,7 +125,7 @@ let iter_down ?(self = true) f n =
   in
   rec_iter_down n.down
 
-(* Applies f to elements of the DLM, from right to left *)
+(* Applies f to elements of the matrix, from right to left *)
 let iter_left ?(self = true) f n =
   if self then f n;
   let rec rec_iter_left node =
@@ -124,7 +136,7 @@ let iter_left ?(self = true) f n =
   in
   rec_iter_left n.left
 
-(* Applies f to elements of the DLM, from right to left *)
+(* Applies f to elements of the matrix, from right to left *)
 let iter_right ?(self = true) f n =
   if self then f n;
   let rec rec_iter_right node =
@@ -135,7 +147,7 @@ let iter_right ?(self = true) f n =
   in
   rec_iter_right n.right
 
-(* Applies f to elements of the DLM, from down to up *)
+(* Applies f to elements of the matrix, from down to up *)
 let iter_up ?(self = true) f n =
   if self then f n;
   let rec rec_iter_up node =
@@ -161,13 +173,13 @@ let remove_row row =
   in
   iter_right ~self:false cover_node row 
 
-(* Removes the given column and all rows in column own list from
- the DLM*)
+(* Removes the given column and all rows that has a 1 in the spot of this column from
+ the matrix *)
 let cover column_header =
   remove_col column_header;
   iter_down ~self:false remove_row column_header
 
-(* Un-removes the given column and all rows in column own list from the DLM*)
+(* Un-removes the given column and all rows from the matrix *)
 let uncover column_header =
   let uncover_node n =
     n.header.size <- n.header.size + 1;
@@ -181,75 +193,6 @@ let uncover column_header =
   column_header.right.left <- column_header;
   column_header.left.right <- column_header
 
-let print_solution fmt (o, k) =
-  for i = 0 to k - 1  do
-    Format.fprintf fmt "%d" o.(i).size;
-    if i < k-1 then Format.fprintf fmt "@ "
-  done
 
-(* Returns the min column *)
-let choose_min h =
-  let rec rec_chose min node =
-    if node = h then min
-    else if node.size < min.size then
-      rec_chose node node.right
-    else
-      rec_chose min node.right
-  in
-  rec_chose h.right h.right.right
-
-
-(* Searches for all solutions, applying [f] on each *)
-let rec search f k h o =
-  if h = h.right then f (o, k)
-  else
-    let column = choose_min h in
-    let get_down r =
-      o.(k) <- r;
-      iter_right ~self:false (fun j -> cover j.header) r;
-      search f (k + 1) h o;
-      iter_left ~self:false (fun j -> uncover j.header) r
-    in
-      cover column;
-      iter_down ~self:false get_down column;
-      uncover column
-
-type solution = node array * int
-
-(* Returns a solution as an int list *)
-let list_of_solution (o, k) =
-  let rec rec_stl l i =
-    if i = k then l else rec_stl (o.(i).size :: l) (i + 1)
-  in
-  rec_stl [] 0
-
-
-(* Applies f to all solutions returned by function search *)
-let iter_solution f dlm =
-  let o = Array.init dlm.num_col (fun _ -> one_by_one ()) in
-  search f 0 dlm.master o
-
-let count_solutions m =
-  let r = ref 0 in
-  iter_solution (fun (_, _) -> r:= !r + 1) m;
-  !r
-
-let get_solution_list m =
-  let list_ref = ref [] in
-  iter_solution (
-    fun (o, k) -> list_ref := list_of_solution (o, k) :: !list_ref
-  ) m;
-  !list_ref
-
-(* Print the given solution as an int list *)
-let print_list_solution l =
-  List.iter ~f:(fun e -> Format.printf "%d " e) l; Format.printf "@."
-
-exception Solution of (node array * int)
-
-let get_first_solution m =
-  try
-    iter_solution (fun s -> raise (Solution s)) m;
-    raise Not_found
-  with
-    | Solution s -> s
+type solution = node array
+end
