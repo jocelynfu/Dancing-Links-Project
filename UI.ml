@@ -95,6 +95,7 @@ let key_handler c =
   match c with
     | 'q' | 'Q' -> raise Stop
     | ' ' -> paused := not(!paused)
+    | 'n' | 'N' -> ()
     | _ -> ()
 
 

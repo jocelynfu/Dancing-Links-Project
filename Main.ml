@@ -2,8 +2,8 @@ open Core.Std
 open Event51
 open Pentomino
 
-let gen_board () w h =
-  new Board.board (0,0) w h
+let gen_board w h =
+  Draw.draw_board w h
 
 let 6by10_initializer () : unit =
   ignore (gen_board () 10 6)
