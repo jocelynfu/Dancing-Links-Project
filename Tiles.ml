@@ -3,15 +3,15 @@ open Core.Std
 class type tiles = 
 object 
   val mutable positions : (int * int) list list 
-  method create : unit -> (int * int) list list 
+  method create : (int * int) list list 
 end
 
-class XPiece (width : int) (height: int) : tiles = 
+class xpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
     let rec count n m = 
-      if n < height && m < (width-1)
+      if n > 1 && n < height && m < (width-1)
       then positions <- [(0,1);(n,m);(n-1,m+1);(n,m+1);(n,m+2);(n+1,m+1)]::positions
       else ();
       if n = height && m = width then () 
@@ -20,7 +20,7 @@ object
     count 2 1; positions
 end
 
-class IPiece (width : int) (height: int) : tiles = 
+class ipiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -37,7 +37,7 @@ object
     count 1 1; positions 
 end 
 
-class ZPiece (width : int) (height: int) : tiles = 
+class zpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -54,7 +54,7 @@ object
     count 1 1; positions 
 end 
 
-class VPiece (width : int) (height: int) : tiles = 
+class vpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -77,7 +77,7 @@ object
     count 1 1; positions 
 end 
 
-class TPiece (width : int) (height: int) : tiles = 
+class tpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -100,7 +100,7 @@ object
     count 1 1; positions 
 end 
 
-class WPiece (width : int) (height: int) : tiles = 
+class wpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -124,7 +124,7 @@ object
 end 
 
 
-class LPiece (width : int) (height: int) : tiles = 
+class lpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -147,21 +147,21 @@ object
     count 1 1; positions 
 end 
 
-class YPiece (width : int) (height: int) : tiles = 
+class ypiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
     let rec count n m = 
       if m < width && n < (height - 2) 
-      then positions <- [(0,8);(n,m);(n,m+1);(n,m+2);(n,m+3);(n+1,m+2)]::positions
+      then positions <- [(0,8);(n,m);(n+1,m);(n+2,m);(n+2,m+1);(n+3,m)]::positions
       else (); 
       if m < (width - 2) && n < height 
       then positions <- [(0,8);(n,m);(n,m+1);(n,m+2);(n,m+3);(n+1,m+1)]::positions
       else (); 
-      if m < width && n < (height - 1) 
+      if m < width && n > 1 && n < (height - 1) 
       then positions <- [(0,8);(n,m);(n,m+1);(n-1,m+1);(n+1,m+1);(n+2,m+1)]::positions
       else (); 
-      if n < height && m < width
+      if n > 2 && n < height && m < width
       then positions <- [(0,8);(n,m);(n,m+1);(n+1,m+1);(n-1,m+1);(n-2,m+1)]::positions
       else (); 
       if n = height && m = width then () 
@@ -170,7 +170,7 @@ object
     count 1 1; positions 
 end 
 
-class UPiece (width : int) (height: int) : tiles = 
+class upiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -193,7 +193,7 @@ object
     count 1 1; positions 
 end 
 
-class PPiece (width : int) (height: int) : tiles = 
+class ppiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -216,7 +216,7 @@ object
     count 1 1; positions 
 end 
 
-class FPiece (width : int) (height: int) : tiles = 
+class fpiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 
@@ -240,7 +240,7 @@ object
 end 
 
 
-class NPiece (width : int) (height: int) : tiles = 
+class npiece (width : int) (height: int) : tiles = 
 object 
   val mutable positions = []
   method create = 

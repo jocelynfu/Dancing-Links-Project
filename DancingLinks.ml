@@ -1,7 +1,7 @@
 open Core.Std
 open Array
 
-
+(*
 module type D =
   sig
     
@@ -30,11 +30,11 @@ module type D =
 
     (* what functions do we need here? *)
 						 
-  end;;
+  end
 
 module DancingLinks : D =
   struct
-
+*)
     type node = {
       mutable up : node;
       mutable down : node;
@@ -56,7 +56,6 @@ let one_by_one () =
 	       size = 0; up = m; down = m;
 	       left = m; right = m}
   in m
-
 
 
 (* add new node to the right of existing node *)
@@ -118,7 +117,7 @@ let generate_headers ?primary size h =
 let iter_down ?(self = true) f n =
   if self then f n;
   let rec rec_iter_down node =
-    if node <> n then begin
+    if not (phys_equal node n) then begin
       f node;
       rec_iter_down node.down
     end
@@ -129,7 +128,7 @@ let iter_down ?(self = true) f n =
 let iter_left ?(self = true) f n =
   if self then f n;
   let rec rec_iter_left node =
-    if node <> n then begin
+    if not (phys_equal node n) then begin
       f node;
       rec_iter_left node.left
     end
@@ -140,7 +139,7 @@ let iter_left ?(self = true) f n =
 let iter_right ?(self = true) f n =
   if self then f n;
   let rec rec_iter_right node =
-    if node <> n then begin
+    if not (phys_equal node n) then begin
       f node;
       rec_iter_right node.right
     end
@@ -151,14 +150,14 @@ let iter_right ?(self = true) f n =
 let iter_up ?(self = true) f n =
   if self then f n;
   let rec rec_iter_up node =
-    if node <> n then begin
+    if not (phys_equal node n) then begin
       f node;
       rec_iter_up node.up
     end
   in
   rec_iter_up n.up
 
-
+(*
 (* removes a column *)
 let remove_col header = 
    header.right.left <- header.left;
@@ -177,7 +176,20 @@ let remove_row row =
  the matrix *)
 let cover column_header =
   remove_col column_header;
-  iter_down ~self:false remove_row column_header
+  iter_down ~self:false remove_row column_header *)
+
+let cover column_header =
+  column_header.right.left <- column_header.left;
+  column_header.left.right <- column_header.right;
+  let cover_node n =
+    n.down.up <- n.up;
+    n.up.down <- n.down;
+    n.header.size <- (n.header.size - 1)
+  in
+  let cover_row n =
+    iter_right ~self:false cover_node n
+  in
+  iter_down ~self:false cover_row column_header
 
 (* Un-removes the given column and all rows from the matrix *)
 let uncover column_header =
@@ -195,4 +207,5 @@ let uncover column_header =
 
 
 type solution = node array
-end
+
+(* end *)

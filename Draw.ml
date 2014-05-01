@@ -1,5 +1,6 @@
 open Core.Std
 open Graphics
+open Pentomino
 
 #load "graphics.cma";;
 (* helper module for drawing graphics *)
@@ -100,7 +101,11 @@ let draw_solution (sol: string list list) (board: int * int) =
 let run () =
   Graphics.open_graph "";
   draw_board 10 6;
-  draw_solution [["P";"1,1";"1,2";"2,1";"2,2";"2,3"];
+  let sol = Pentomino.solve 10 6 in
+  draw_solution sol (10,6) 
+
+(*
+draw_solution [["P";"1,1";"1,2";"2,1";"2,2";"2,3"];
 		 ["I";"1,3";"1,4";"1,5";"1,6";"1,7"];
 		 ["V";"1,8";"1,9";"1,10";"2,10";"3,10"];
 		 ["Y";"2,4";"2,5";"2,6";"2,7";"3,5"];
@@ -111,5 +116,7 @@ let run () =
 		 ["X";"4,3";"5,2";"5,3";"5,4";"6,3"];
 		 ["F";"4,5";"5,5";"5,6";"6,4";"6,5"];
 		 ["T";"4,7";"5,7";"6,6";"6,7";"6,8"];
-		 ["W";"4,8";"5,8";"5,9";"6,9";"6,10"]] (10,6)
+		 ["W";"4,8";"5,8";"5,9";"6,9";"6,10"]] (10,6) *)
+;;
 
+run ();;
