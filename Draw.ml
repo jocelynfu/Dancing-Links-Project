@@ -9,10 +9,14 @@ open Event51
 exception Error of string
 
 let ratio = 30
-let b_h = 20
-let b_w = 30
-
-
+let b_h = 30
+let b_w = 60
+let boardw = ref 0 
+let boardh = ref 0 
+let counter = ref 1
+let count_fifteen = ref 0 
+let count_twelve = ref 0
+let count_ten = ref 0
 
 
 (* pass in initial position of board and height and width *)
@@ -101,27 +105,29 @@ let draw_solution (sol: string list list) (board: int * int) =
     fill_grid lst board in
   List.iter (~f:f) sol
 
-(*let gen_button1 () = new four_by_fifteen
-
-let gen_button2 () = new five_by_twelve
-
-let gen_button3 () = new six_by_ten
-		  
-let gen_button4 () = new change_sol *)
-
-let draw_all w h =
- (* Graphics.clear_graph ();
-  let button1 = gen_button1 () in
-  let button2 = gen_button2 () in
-  let button3 = gen_button3 () in
-  let button4 = gen_button4 () in
-  button1#draw;
-  button2#draw;
-  button3#draw;
-  button4#draw; *)
+let draw_all w h counter =
   draw_board w h;
-  let sol = Pentomino.solve w h in
+  let sol = Pentomino.solve w h counter in
   draw_solution sol (w,h)
+
+let count_by_board w h = 
+  let head = Pentomino.generate_headers w h in
+  let _ = Printf.printf "1 ";flush_all () in 
+  let matrix = Pentomino.create_rows w h head in
+  let _ = Printf.printf "2 ";flush_all () in 
+  let num_sol = Pentomino.count_solutions matrix in
+  let _ = Printf.printf "%d done counting! " w; flush_all () in
+  if w = 15 then count_fifteen := num_sol 
+  else if w = 12 then count_twelve := num_sol 
+  else if w = 10 then count_ten := num_sol 
+  else ()
+
+
+let erase () = 
+  Graphics.set_color white; 
+  Graphics.fill_rect 0 0 (Graphics.size_x ()) 
+		     ((Graphics.size_y ()) - (4 * b_h))
+
 
 class type button =
 	  object
@@ -131,11 +137,34 @@ class type button =
 	    method do_change : int*int -> unit
 	  end
 
+class change_sol =
+object(self)
+  val x = 7 * b_w 
+  val y = (Graphics.size_y ()) - (2 * b_h)
+
+  initializer 
+  self#draw
+
+  method draw = 
+    Graphics.set_color black;
+    Graphics.fill_rect x y (2*b_w) b_h;	
+    Graphics.moveto (x+10) (y+10);
+    Graphics.set_color white;
+    Graphics.draw_string "Change Solution" 
+
+  method do_change status =
+      let a = status.mouse_x in
+      let b = status.mouse_y in
+      if a > x && a < (x+2*b_w) && b > y && b < (y+b_h)
+      then (counter := !counter + 1; erase (); 
+	    draw_all !boardw !boardh !counter)
+      else ()
+end
 
 class four_by_fifteen =
 object (self)
 
-  val x = 2 * b_w
+  val x = b_w
 
   val y = (Graphics.size_y ()) - (2 * b_h)
 
@@ -143,17 +172,18 @@ object (self)
     self#draw
 
   method draw = 
-    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
-    Graphics.fill_rect x y b_w b_h;	
-    Graphics.moveto (x+5) (y+5);
     Graphics.set_color black;
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+10) (y+10);
+    Graphics.set_color white;
     Graphics.draw_string "4 by 15" 
 
   method do_change status =
       let a = status.mouse_x in
       let b = status.mouse_y in
       if a > x && a < (x+b_w) && b > y && b < (y+b_h)
-      then draw_all 15 4
+      then (boardw := 15; boardh := 4; counter := 1;
+	    erase (); draw_all 15 4 1)
       else ()
 
 
@@ -162,91 +192,102 @@ end
 class five_by_twelve =
 object(self)
 
-  val x = 2 * b_w + 3 * b_w
+  val x = 3 * b_w 
   val y = (Graphics.size_y ()) - (2 * b_h)
 
   initializer 
   self#draw
 
   method draw = 
-    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
-    Graphics.fill_rect x y b_w b_h;	
-    Graphics.moveto (x+5) (y+5);
     Graphics.set_color black;
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+10) (y+10);
+    Graphics.set_color white;
     Graphics.draw_string "5 by 12" 
 
  method do_change status =
       let a = status.mouse_x in
       let b = status.mouse_y in
       if a > x && a < (x+b_w) && b > y && b < (y+b_h)
-      then draw_all 12 5
+      then (boardw := 12; boardh := 5; counter := 1; 
+	    erase (); draw_all 12 5 1)
       else ()
 end
   
 
 class six_by_ten =
 object(self)
-  val x = 2 * b_w + 6 * b_w
+  val x = 5 * b_w
   val y = (Graphics.size_y ()) - (2 * b_h)
 
   initializer 
   self#draw
 
   method draw = 
-    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
-    Graphics.fill_rect x y b_w b_h;	
-    Graphics.moveto (x+5) (y+5);
     Graphics.set_color black;
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+10) (y+10);
+    Graphics.set_color white;
     Graphics.draw_string "6 by 10" 
 
  method do_change status =
       let a = status.mouse_x in
       let b = status.mouse_y in
       if a > x && a < (x+b_w) && b > y && b < (y+b_h)
-      then draw_all 10 6
+      then (boardw := 10; boardh := 6; counter := 1; 
+	    erase (); draw_all 10 6 1)
       else ()
 end
-  
 
-class change_sol =
+class count_sol =
 object(self)
-  val x = 2 * b_w + 9 * b_w
-  val y = (Graphics.size_y ()) - (2 * b_h)
+  val x = 7 * b_w 
+  val y = (Graphics.size_y ()) - (4 * b_h)
 
   initializer 
   self#draw
 
   method draw = 
-    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
-    Graphics.fill_rect x y b_w b_h;	
-    Graphics.moveto (x+5) (y+5);
     Graphics.set_color black;
-    Graphics.draw_string "Change Solution" 
+    Graphics.fill_rect x y (2*b_w) b_h;	
+    Graphics.moveto (x+10) (y+10);
+    Graphics.set_color white;
+    Graphics.draw_string "Count Solutions" 
 
-  method do_change =
-    let rec change () =
-      let status = Graphics.wait_next_event [Graphics.Button_down] in
+  method do_change status =
       let a = status.mouse_x in
       let b = status.mouse_y in
-      if a > x && a < (x+b_w) && b > y && b < (y+b_h)
-      then ()
-      else change () in 
-    change ()
+      if a > x && a < (x+2*b_w) && b > y && b < (y+b_h)
+      then 
+	(let s_x = (Graphics.size_x ()/2) - 65 in
+	 let s_y = 30 in 
+	 Graphics.moveto s_x s_y;
+	 Graphics.set_color black;
+	 let s =
+	   match !boardw with
+	   | 15 -> "Number of Solutions: "^ (string_of_int !count_fifteen)
+	   | 12 -> "Number of Solutions: "^ (string_of_int !count_twelve)
+	   | 10 -> "Number of Solutions: "^ (string_of_int !count_ten)
+	   | _ -> "Please select a board first!" in
+	 Graphics.draw_string (s))
+      else ()
 end
-	       
-
+  	      
 
 let run () =
   Graphics.open_graph "";
   let button1 = new four_by_fifteen in
   let button2 = new five_by_twelve in
   let button3 = new six_by_ten in
-  button1#draw;
-  button2#draw;
-  button3#draw;
+  let button4 = new change_sol in
+  let button5 = new count_sol in
+  let _ = (count_by_board 15 4; 
+  count_by_board 12 5;
+  count_by_board 10 6) in
   let rec change () =
     let status = Graphics.wait_next_event [Graphics.Button_down] in
-    button1#do_change status; button2#do_change status; button3#do_change status; change () in 
+    button1#do_change status; button2#do_change status; button3#do_change status;
+    button4#do_change status; button5#do_change status; change () in 
   change ();
   ignore (Graphics.read_key ());; 
 
