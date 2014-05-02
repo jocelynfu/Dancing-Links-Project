@@ -179,6 +179,8 @@ let cover column_header =
   iter_down ~self:false remove_row column_header *)
 
 let cover column_header =
+  (*let _ = Printf.printf "header name: %s " column_header.name; 
+	  flush_all () in *)
   column_header.right.left <- column_header.left;
   column_header.left.right <- column_header.right;
   let cover_node n =

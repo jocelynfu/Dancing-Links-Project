@@ -32,13 +32,14 @@ exception Stop
    be taken to "de-bounce" the mouse. *)
 let read_event () =
   let new_pos = Graphics.mouse_pos () in
-  if new_pos <> !mouse_pos then begin
+  Event51.fire_event button_down new_pos 
+  (*if new_pos <> !mouse_pos then begin
     mouse_pos := new_pos ;
     Event51.fire_event mouse_motion (Graphics.mouse_pos ())
   end ;
   if Graphics.key_pressed () then begin
     Event51.fire_event key_pressed (Graphics.read_key ())
-  end ;
+  end ; 
   if not !mouse_state then begin
     let s = Graphics.wait_next_event [Graphics.Button_down ; Graphics.Poll] in
     if s.Graphics.button then begin
@@ -53,7 +54,7 @@ let read_event () =
       Event51.fire_event button_up new_pos
     end
   end ;
-  Event51.fire_event clock ()
+  Event51.fire_event clock () *)
 
 (* Helper for restarting interrupted system calls (OY) *)
 let rec restart f arg =
@@ -66,7 +67,7 @@ let rec restart f arg =
 let rec event_loop () =
   read_event ();
   Graphics.synchronize ();
-  restart Thread.delay (1.0 /. frame_rate);
+  restart Thread.delay (1.0 /. 10.);
   event_loop ()
 
 (** The command "run_ui x y init" starts up the graphical environment with a
@@ -84,7 +85,7 @@ let run_ui (x:int) (y:int) (init:unit->unit) : unit =
 
 (** only call the supplied function on every delay clock ticks and only if the
     simulation is not paused. *)
-let clock_handler (f : unit -> unit) () : unit =
+(*let clock_handler (f : unit -> unit) () : unit =
   if inc_counter () && not !paused then f ()
 
 (** Press q or Q to stop the simulation.
@@ -97,7 +98,6 @@ let key_handler c =
     | ' ' -> paused := not(!paused)
     | 'n' | 'N' -> ()
     | _ -> ()
-
 
 
 (** Start the graphical environment initialized to the size of the world.
@@ -113,3 +113,5 @@ let run_world (init:unit -> unit) (clock_f:unit -> unit) : unit =
            init ()
          end
 
+ 
+ *)

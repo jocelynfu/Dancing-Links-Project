@@ -1,6 +1,7 @@
 open Core.Std
 open Graphics
 open Pentomino
+open Event51
 
 #load "graphics.cma";;
 (* helper module for drawing graphics *)
@@ -8,6 +9,10 @@ open Pentomino
 exception Error of string
 
 let ratio = 30
+let b_h = 20
+let b_w = 30
+
+
 
 
 (* pass in initial position of board and height and width *)
@@ -96,13 +101,154 @@ let draw_solution (sol: string list list) (board: int * int) =
     fill_grid lst board in
   List.iter (~f:f) sol
 
+(*let gen_button1 () = new four_by_fifteen
+
+let gen_button2 () = new five_by_twelve
+
+let gen_button3 () = new six_by_ten
+		  
+let gen_button4 () = new change_sol *)
+
+let draw_all w h =
+ (* Graphics.clear_graph ();
+  let button1 = gen_button1 () in
+  let button2 = gen_button2 () in
+  let button3 = gen_button3 () in
+  let button4 = gen_button4 () in
+  button1#draw;
+  button2#draw;
+  button3#draw;
+  button4#draw; *)
+  draw_board w h;
+  let sol = Pentomino.solve w h in
+  draw_solution sol (w,h)
+
+class type button =
+	  object
+	    val x : int
+	    val y : int
+	    method draw : unit
+	    method do_change : int*int -> unit
+	  end
+
+
+class four_by_fifteen =
+object (self)
+
+  val x = 2 * b_w
+
+  val y = (Graphics.size_y ()) - (2 * b_h)
+
+  initializer 
+    self#draw
+
+  method draw = 
+    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+5) (y+5);
+    Graphics.set_color black;
+    Graphics.draw_string "4 by 15" 
+
+  method do_change status =
+      let a = status.mouse_x in
+      let b = status.mouse_y in
+      if a > x && a < (x+b_w) && b > y && b < (y+b_h)
+      then draw_all 15 4
+      else ()
+
+
+end
+  
+class five_by_twelve =
+object(self)
+
+  val x = 2 * b_w + 3 * b_w
+  val y = (Graphics.size_y ()) - (2 * b_h)
+
+  initializer 
+  self#draw
+
+  method draw = 
+    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+5) (y+5);
+    Graphics.set_color black;
+    Graphics.draw_string "5 by 12" 
+
+ method do_change status =
+      let a = status.mouse_x in
+      let b = status.mouse_y in
+      if a > x && a < (x+b_w) && b > y && b < (y+b_h)
+      then draw_all 12 5
+      else ()
+end
+  
+
+class six_by_ten =
+object(self)
+  val x = 2 * b_w + 6 * b_w
+  val y = (Graphics.size_y ()) - (2 * b_h)
+
+  initializer 
+  self#draw
+
+  method draw = 
+    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+5) (y+5);
+    Graphics.set_color black;
+    Graphics.draw_string "6 by 10" 
+
+ method do_change status =
+      let a = status.mouse_x in
+      let b = status.mouse_y in
+      if a > x && a < (x+b_w) && b > y && b < (y+b_h)
+      then draw_all 10 6
+      else ()
+end
+  
+
+class change_sol =
+object(self)
+  val x = 2 * b_w + 9 * b_w
+  val y = (Graphics.size_y ()) - (2 * b_h)
+
+  initializer 
+  self#draw
+
+  method draw = 
+    Graphics.set_color (Graphics.rgb 0xC0 0xC0 0xC0);
+    Graphics.fill_rect x y b_w b_h;	
+    Graphics.moveto (x+5) (y+5);
+    Graphics.set_color black;
+    Graphics.draw_string "Change Solution" 
+
+  method do_change =
+    let rec change () =
+      let status = Graphics.wait_next_event [Graphics.Button_down] in
+      let a = status.mouse_x in
+      let b = status.mouse_y in
+      if a > x && a < (x+b_w) && b > y && b < (y+b_h)
+      then ()
+      else change () in 
+    change ()
+end
+	       
 
 
 let run () =
   Graphics.open_graph "";
-  draw_board 10 6;
-  let sol = Pentomino.solve 10 6 in
-  draw_solution sol (10,6) 
+  let button1 = new four_by_fifteen in
+  let button2 = new five_by_twelve in
+  let button3 = new six_by_ten in
+  button1#draw;
+  button2#draw;
+  button3#draw;
+  let rec change () =
+    let status = Graphics.wait_next_event [Graphics.Button_down] in
+    button1#do_change status; button2#do_change status; button3#do_change status; change () in 
+  change ();
+  ignore (Graphics.read_key ());; 
 
 (*
 draw_solution [["P";"1,1";"1,2";"2,1";"2,2";"2,3"];
@@ -116,7 +262,6 @@ draw_solution [["P";"1,1";"1,2";"2,1";"2,2";"2,3"];
 		 ["X";"4,3";"5,2";"5,3";"5,4";"6,3"];
 		 ["F";"4,5";"5,5";"5,6";"6,4";"6,5"];
 		 ["T";"4,7";"5,7";"6,6";"6,7";"6,8"];
-		 ["W";"4,8";"5,8";"5,9";"6,9";"6,10"]] (10,6) *)
-;;
+		 ["W";"4,8";"5,8";"5,9";"6,9";"6,10"]] (10,6)*) 
 
 run ();;

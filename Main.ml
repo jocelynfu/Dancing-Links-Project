@@ -27,7 +27,6 @@ let parse_args () : unit -> unit =
   | "6by10" -> 6by10_initializer
   | "5by12" -> 5by12_initializer
   | "4by15" -> 4by15_initializer
-  | "3by20" -> 3by20_initializer
   | _ -> usage ()
 
 let run () : unit =

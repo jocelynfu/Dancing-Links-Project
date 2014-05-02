@@ -55,16 +55,16 @@ let generate_positions (width:int) (height:int) : string list =
     (* let _ = Printf.printf "add_row!  "; flush_all () in *)
     let nodes = List.map ~f:(fun x -> one_node x) ls in
     match nodes with
-    | [] -> let _ = Printf.printf "impossible! " ; flush_all () in
+    | [] -> (*let _ = Printf.printf "impossible! " ; flush_all () in*)
        failwith "impossible"
-    | hd :: tl -> let _ =
+    | hd :: tl -> let node =
                     List.fold_right ~f:(fun n1 n2 -> add_right n2 n1; n1)
                                     ~init:hd tl in
-                  let _ = List.map
-                            ~f:(fun n -> n.header <- search_name n head;
+                  let _ = iter_right ~self:true 
+                            (fun n -> n.header <- search_name n head;
                                        	 n.header.size <- (n.header.size + 1);
-                                       	 add_below n n.header)
-                            nodes in
+                                       	 add_below n.header n)
+                            node in
                   (*let _ = add_right head.left master_node in*)
 		  (* let _ = Printf.printf "end of add_row! " ; flush_all () in*)
                   master_node
@@ -87,7 +87,8 @@ let generate_positions (width:int) (height:int) : string list =
      	  | 9 -> "U"
      	  | 10 -> "P"
      	  | 11 -> "F"
-     	  | 12 -> "N") in	 
+     	  | 12 -> "N"
+	  | _ -> failwith "impossible") in	 
     let positions =
       match l with
       | [] -> failwith "impossible"
@@ -143,17 +144,19 @@ let uncover h = DancingLinks.uncover h
 
 (* Searches for all solutions, applying [f] on each *)
 let rec search f k h o =
-  let _ = Printf.printf "h: %s " h.right.name; flush_all () in
+  (*let _ = Printf.printf "h: %s %s " h.name h.right.name; flush_all () in *) 
   if (phys_equal h h.right) then f (o, k)
   else
-    let _ = Printf.printf "k: %d " k; flush_all () in
+    (* let _ = Printf.printf "k: %d " k; flush_all () in *)
     let column = choose_min h in
     let get_down r =
       o.(k) <- r;
       iter_right ~self:false (fun j -> 
-	     (let _ = Printf.printf "j: %s " j.header.name; flush_all () in
-				      cover j.header)) r;
+	     (*(let _ = Printf.printf "j: %s " j.header.name; flush_all () in
+	      *)	      cover j.header) r;
+      (* let _ = Printf.printf "search begins "; flush_all () in *)
       search f (k + 1) h o;
+      (*let _ = Printf.printf "search ended "; flush_all () in*)
       iter_left ~self:false (fun j -> uncover j.header) r
     in
     cover column;
@@ -176,22 +179,49 @@ let get_first_solution m =
   with
 	| Solution s -> s
 
+
+(*  let _ = Printf.printf "solution: %s %s %s %s %s %s" 
+			o.(0).name o.(0).right.name o.(0).right.right.name
+		   o.(0).right.right.right.name
+  o.(0).right.right.right.right.name
+  o.(0).right.right.right.right.right.name; flush_all () in*)
+
 let string_of_solution s : string list list =
-let _ = Printf.printf "string_of_solution "; flush_all () in
   let (o,k) = s in
   let rec convert o counter =  
-	if counter < 0
-	then []
-	else let node = o.(counter) in
-     	let rec print_row n1 n =
-       	if n.right = n then [n.name]
-       	else n.name :: print_row n1 n.right in
-     	print_row node node :: convert o (counter-1) in
-  convert o k
+    if counter < 0
+    then []
+    else let node = o.(counter) in
+         (*let lst = [o.(counter).name; o.(counter).right.name; 
+	  o.(counter).right.right.name; o.(counter).right.right.right.name;
+	  o.(counter).right.right.right.right.name ;
+	  o.(counter).right.right.right.right.right.name ] in *)
+     	  let rec print_row n1 n =
+       	   if (n1.name = n.name) then [n.name]
+       	   else 
+	     n.name :: (print_row n1 n.right) in
+     	  (print_row node node.right) :: (convert o (counter-1)) in
+  convert o (k-1)
 
  let solve (width:int) (height:int) : string list list =
    let _ = Printf.printf "solve "; flush_all () in
    let head = generate_headers width height in
    let matrix = create_rows width height head in
+   let _ = Printf.printf "begin matrix \n"; flush_all() in
+   let print_right matrix = iter_left ~self:true (fun x -> Printf.printf "%s has %d " x.name x.size; flush_all ()) matrix in
+   let _ = iter_down ~self:true (fun x -> let _ = Printf.printf "\n"; flush_all() in print_right x) matrix.left in
+
    let s = get_first_solution matrix in
+ (*  let (o,k) = s in
+   let _ = Printf.printf "sol: %d %s %s " k o.(0).name o.(k-1).name; flush_all () in *)
    string_of_solution s
+
+let list_of_solution (o, k) =
+  let rec rec_stl l i =
+    if i = k then l else rec_stl (o.(i).size :: l) (i + 1)
+  in
+  rec_stl [] 0
+
+(* Print the given solution as an int list *)
+let print_list_solution l =
+  List.iter ~f:(fun e -> Format.printf "%d " e) l; Format.printf "@."
